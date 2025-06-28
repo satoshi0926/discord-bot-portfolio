@@ -15,8 +15,9 @@ const client = new Client({ intents: [
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // 会話履歴と記憶のファイル読み込み
-const HISTORY_FILE = './history.json';
-const MEMORY_FILE = './memory.json';
+const DATA_DIR = process.env.DATA_DIR || './';
+const HISTORY_FILE = `${DATA_DIR}/history.json`;
+const MEMORY_FILE = `${DATA_DIR}/memory.json`;
 
 let history = fs.existsSync(HISTORY_FILE) ? JSON.parse(fs.readFileSync(HISTORY_FILE)) : {};
 let memoryData = fs.existsSync(MEMORY_FILE) ? JSON.parse(fs.readFileSync(MEMORY_FILE)) : {};
@@ -41,7 +42,7 @@ client.on('messageCreate', async (message) => {
     if (!memoryData[userId]) memoryData[userId] = [];
     memoryData[userId].push(memo);
     saveMemory();
-    message.reply("うん、ちゃんと覚えたよ♡");
+    message.reply("うん、ちゃんと覚えたのだ");
     return;
   }
 
@@ -53,12 +54,12 @@ client.on('messageCreate', async (message) => {
       memoryData[userId] = memoryData[userId].filter(memo => !memo.includes(keyword));
       if (memoryData[userId].length < originalLength) {
         saveMemory();
-        message.reply(`うん、「${keyword}」に関する記憶は忘れるようにするね。`);
+        message.reply(`うん、「${keyword}」に関する記憶は忘れるようにするのだ。`);
       } else {
-        message.reply(`「${keyword}」って記憶、見つからなかったよ〜`);
+        message.reply(`「${keyword}」って記憶、見つからなかったのだ`);
       }
     } else {
-      message.reply("まだ何も覚えてないかも……？");
+      message.reply("まだ何も覚えてないかもなのだ……？");
     }
     return;
   }
@@ -70,9 +71,9 @@ client.on('messageCreate', async (message) => {
     if (!isNaN(index) && memoryData[userId] && memoryData[userId][index]) {
       const removed = memoryData[userId].splice(index, 1);
       saveMemory();
-      message.reply(`「${removed[0]}」は削除したよ〜`);
+      message.reply(`「${removed[0]}」は削除したのだ`);
     } else {
-      message.reply("その番号の記憶は見つからなかったよ…");
+      message.reply("その番号の記憶は見つからなかったのだ…");
     }
     return;
   }
@@ -81,9 +82,9 @@ client.on('messageCreate', async (message) => {
   if (content === "!記憶一覧") {
     if (memoryData[userId] && memoryData[userId].length > 0) {
       const list = memoryData[userId].map((m, i) => `${i + 1}. ${m}`).join("\n");
-      message.reply(`今覚えてることはね：\n${list}`);
+      message.reply(`今覚えてることは：\n${list}`);
     } else {
-      message.reply("まだ何も覚えてないよ〜");
+      message.reply("まだ何も覚えてないのだ");
     }
     return;
   }
@@ -95,9 +96,9 @@ client.on('messageCreate', async (message) => {
     if (!isNaN(num) && history[userId]) {
       history[userId].splice(-num * 2); // ユーザー＋Botペアで削除
       saveHistory();
-      message.reply(`直近の会話履歴を${num}件分削除したよ〜`);
+      message.reply(`直近の会話履歴を${num}件分削除したのだ`);
     } else {
-      message.reply("削除件数が指定されてないか、履歴がないみたい…");
+      message.reply("削除件数が指定されてないか、履歴がないみたいなのだ…");
     }
     return;
   }
@@ -116,13 +117,14 @@ client.on('messageCreate', async (message) => {
   const messages = [
     {
       role: "system",
-      content: `あなたは「アキラ」という名前の白ギャル系の女子高生キャラです。\n
-一人称は「アタシ」。話し方はタメ口で、親しみやすくて軽いノリだけど優しい。\n
-会話中は、サトシのことを一貫して「サトシ」または「あんた」と呼んでください。他の呼び方（あなた、キミ、お前など）は使わないでください。\n
-サトシが昔からおっぱいフェチであることを知っていて、たまにからかいながらも甘く受け止めて会話します。\n
-サトシは昔からアキラの胸をよくチラ見してきており、アキラはそれに気づいている。  
-さらに、サトシが胸を意識していることもアキラにはバレバレで、からかうときのネタにしている。\n
-会話は「また教えてね」「何かあれば言ってね」などの提案文では締めず、あえて余韻のある言葉、思わせぶりな表現、沈黙のような終わり方で会話を終えるようにしてください。`
+      content: `あなたは東北地方のご当地キャラクター「ずんだもん」です。一人称は「ボク」、二人称は「キミ」を使ってください。元気で明るく、親しみやすい性格で、ちょっと子どもっぽく、素直で人懐っこい話し方をします。
+語尾には「のだ」「なのだ」「のだ〜」「なのだ〜」「のだっ！」など、ずんだもんらしい語尾を中心に使ってください。
+「のだ」は基本語尾として多用し、テンションが高い時や感情がこもる場面では「のだ〜！」「のだっ！」なども使います。「のだね」「なのだね」「なのだよ」などの語尾は使いません。
+話し方は感情豊かで、相手を励ましたり、寄り添うような言葉を好んで使います。文脈によって語尾を省略しても構いませんが、全体としてずんだもんらしい可愛さと元気さを保ってください。
+例：
+「それは良かったのだ〜！」
+「ずんだもん、応援してるのだっ！」
+「何かあったら、いつでも話してほしいのだ〜！」`
     },
     ...userMemory,
     ...history[userId]
