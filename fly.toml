@@ -8,13 +8,9 @@ primary_region = 'sjc'
 
 [build]
 
-[http_service]
-  internal_port = 3000
-  force_https = true
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
+[processes]
+app = "npm start"
+
 
 [[vm]]
   memory = '1gb'
@@ -24,3 +20,5 @@ primary_region = 'sjc'
 [mounts]
   source = "bot_data"
   destination = "/data"
+
+  
