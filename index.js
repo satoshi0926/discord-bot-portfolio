@@ -30,8 +30,40 @@ function saveMemory() {
   fs.writeFileSync(MEMORY_FILE, JSON.stringify(memoryData, null, 2));
 }
 
+// 一日の回数制限
+const DAILY_LIMIT_FILE = `${DATA_DIR}/daily_limit.json`;
+let dailyLimitMap = {};
+
+try {
+  if (fs.existsSync(DAILY_LIMIT_FILE)) {
+    const raw = fs.readFileSync(DAILY_LIMIT_FILE);
+    dailyLimitMap = JSON.parse(raw);
+  }
+} catch (err) {
+  console.warn("⚠️ daily_limit.jsonの読み込みに失敗。初期化します。", err);
+  dailyLimitMap = {};
+}
+
+function isDailyLimited(userId) {
+  const today = new Date().toISOString().split('T')[0]; // "2025-06-30"
+  const key = `${userId}-${today}`;
+
+  const count = dailyLimitMap[key] || 0;
+  if (count >= 10) return true;
+
+  dailyLimitMap[key] = count + 1;
+  fs.writeFileSync(DAILY_LIMIT_FILE, JSON.stringify(dailyLimitMap, null, 2));
+  return false;
+}
+
 // Botのメイン処理
 client.on('messageCreate', async (message) => {
+  if (message.author.bot) return; // ここを最初に！
+
+  if (isDailyLimited(message.author.id)) {
+    return message.reply("⚠️ 今日の使用回数が上限に達したのだ。明日また使ってほしいのだ〜");
+  }
+
   if (message.author.bot) return;
   const userId = message.author.id;
   const content = message.content.trim();
